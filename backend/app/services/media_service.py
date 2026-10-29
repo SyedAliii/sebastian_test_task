@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime, timezone
 
+from app.config import Settings
 from app.core.logging.logger import logger
 from app.db.models import User
+from app.domain.prompts import PromptRefused, prompt_refusal
 from app.domain.schemas import MediaCreated, MediaIn, MediaOut
 from app.repo.job_repo import clear_needs_enqueue, insert_job
 from app.repo.media_repo import get_media_for_workspace, insert_media
@@ -10,9 +12,10 @@ from app.repo.queues import Queues
 
 
 class MediaService:
-    def __init__(self, session, queues: Queues) -> None:
+    def __init__(self, session, queues: Queues, settings: Settings) -> None:
         self._session = session
         self._queues = queues
+        self._settings = settings
 
     async def create_media(
         self,
@@ -20,6 +23,10 @@ class MediaService:
         body: MediaIn,
         correlation_id: str | None = None,
     ) -> MediaCreated:
+        if self._settings.screening_mode == "fixed":
+            reasons = prompt_refusal(body.prompt)
+            if reasons:
+                raise PromptRefused(reasons)
         now = datetime.now(timezone.utc)
         media_id = uuid.uuid4()
         job_id = uuid.uuid4()

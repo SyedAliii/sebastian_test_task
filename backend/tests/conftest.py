@@ -43,6 +43,7 @@ def test_settings() -> Settings:
             "database_url": loaded.database_url_test,
             "alembic_database_url": loaded.alembic_database_url_test,
             "redis_url": loaded.redis_url_test,
+            "screening_mode": "fixed",
         }
     )
 

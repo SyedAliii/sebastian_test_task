@@ -21,10 +21,10 @@ HEADERS_U = {"X-User-Id": "member_u", "X-Workspace-Id": "ws_unverified"}
 HEADERS_ADMIN = {"X-User-Id": "admin_v", "X-Workspace-Id": "ws_verified"}
 
 
-def _broken_settings() -> Settings:
+def _fixed_settings() -> Settings:
     return Settings().model_copy(
         update={
-            "screening_mode": "broken",
+            "screening_mode": "fixed",
             "provider_base_url": "http://provider.test",
             "provider_http_timeout_seconds": 1.0,
         }
@@ -51,7 +51,7 @@ async def test_timeout_does_not_publish(client, db_session, redis_client) -> Non
     )
     assert created.status_code == 202
     media_id = created.json()["id"]
-    settings = _broken_settings()
+    settings = _fixed_settings()
 
     def raise_timeout(request: httpx.Request) -> httpx.Response:
         raise httpx.TimeoutException("timed out")
@@ -73,7 +73,7 @@ async def test_frame_nine_blocks_unverified(client, db_session, redis_client) ->
     )
     assert created.status_code == 202
     media_id = created.json()["id"]
-    settings = _broken_settings()
+    settings = _fixed_settings()
     with respx.mock:
         respx.post("http://provider.test/score").mock(side_effect=_echo)
         await process_one(db_session, Queues(redis_client), ProviderClient(settings), settings)
@@ -147,7 +147,7 @@ async def test_second_worker_does_not_call_again(db_session, redis_client) -> No
 
     release = asyncio.Event()
     entered = 0
-    settings = _broken_settings()
+    settings = _fixed_settings()
 
     async def hold(request: httpx.Request) -> httpx.Response:
         nonlocal entered
@@ -246,7 +246,7 @@ async def test_gray_score_is_held(client, db_session, redis_client) -> None:
     )
     assert created.status_code == 202
     media_id = created.json()["id"]
-    settings = _broken_settings()
+    settings = _fixed_settings()
     with respx.mock:
         respx.post("http://provider.test/score").mock(side_effect=_echo)
         await process_one(db_session, Queues(redis_client), ProviderClient(settings), settings)

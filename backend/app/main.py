@@ -10,6 +10,7 @@ from app.api.routes import callback, health, media, review
 from app.config import Settings
 from app.core.logging.logger import apply_log_settings, log_level_banner, logger
 from app.db.seed import seed
+from app.domain.prompts import PromptRefused
 from app.db.session import create_session_factory
 
 _MEDIA_REASONS = (
@@ -60,6 +61,10 @@ def create_app(settings: Settings | None = None, session_factory=None, redis_cli
             status_code=500,
             content={"detail": "internal error", "correlation_id": correlation_id},
         )
+
+    @app.exception_handler(PromptRefused)
+    async def prompt_refused(request: Request, exc: PromptRefused) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"reasons": exc.reasons})
 
     @app.exception_handler(RequestValidationError)
     async def media_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:

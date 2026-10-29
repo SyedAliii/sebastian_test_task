@@ -1,0 +1,18 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.2.0, pluggy-1.7.0
+rootdir: D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1, asyncio-1.4.1, respx-0.23.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 46 items
+
+tests\test_broken_worker.py .....                                        [ 10%]
+tests\test_health.py ...                                                 [ 17%]
+tests\test_incident.py ..........                                        [ 39%]
+tests\test_media.py ........                                             [ 56%]
+tests\test_prompts.py ........                                           [ 73%]
+tests\test_rules.py .........                                            [ 93%]
+tests\test_seed.py ...                                                   [100%]
+
+============================= 46 passed in 7.04s ==============================

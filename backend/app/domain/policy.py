@@ -9,4 +9,6 @@ def timeout_publishes(mode: str) -> bool:
 
 
 def prompt_refusal(prompt: str | None) -> list[str]:
-    return []
+    from app.domain.prompts import prompt_refusal as match_prompt
+
+    return match_prompt(prompt)

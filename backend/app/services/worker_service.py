@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -10,7 +12,7 @@ from app.domain.decide import decide
 from app.domain.policy import frames_for_provider, timeout_publishes
 from app.repo.attempt_repo import finish_attempt, insert_attempt
 from app.repo.decision_repo import insert_decision
-from app.repo.job_repo import load_job, save_job_state
+from app.repo.job_repo import claim_job, load_job, refresh_lease, save_job_state
 from app.repo.media_repo import apply_media_status
 from app.repo.queues import Queues
 
@@ -35,6 +37,14 @@ async def process_one(session_factory, queues: Queues, provider: ProviderClient,
     except ValueError:
         return True
 
+    if settings.screening_mode == "fixed":
+        async with session_factory() as session:
+            claimed = await claim_job(session, job_id, settings.worker_id, settings.lease_seconds)
+            await session.commit()
+        if not claimed:
+            logger.warning(f"job_id={job_id} step=claim_missed")
+            return True
+
     async with session_factory() as session:
         loaded = await load_job(session, job_id)
         if loaded is None:
@@ -54,7 +64,18 @@ async def process_one(session_factory, queues: Queues, provider: ProviderClient,
         f"workspace_id={snapshot['workspace_id']} media_id={snapshot['media_id']} "
         f"job_id={snapshot['job_id']} attempt=-"
     )
-    reply = await provider.post_score(str(snapshot["media_id"]), sent, correlation_id=correlation_id)
+    refresh_task = None
+    if settings.screening_mode == "fixed":
+        refresh_task = asyncio.create_task(
+            _keep_lease(session_factory, snapshot["job_id"], settings.worker_id, settings.lease_seconds)
+        )
+    try:
+        reply = await provider.post_score(str(snapshot["media_id"]), sent, correlation_id=correlation_id)
+    finally:
+        if refresh_task is not None:
+            refresh_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await refresh_task
     await _save_reply(session_factory, snapshot, attempt_id, reply, settings)
     logger.job_end(
         f"workspace_id={snapshot['workspace_id']} media_id={snapshot['media_id']} "
@@ -90,9 +111,18 @@ async def _start_attempt(session, snapshot: dict, worker_id: str) -> uuid.UUID:
     return attempt_id
 
 
+async def _keep_lease(session_factory, job_id: uuid.UUID, worker_id: str, lease_seconds: float) -> None:
+    while True:
+        await asyncio.sleep(lease_seconds / 3)
+        async with session_factory() as session:
+            await refresh_lease(session, job_id, worker_id, lease_seconds)
+            await session.commit()
+
+
 async def _save_reply(session_factory, snapshot: dict, attempt_id: uuid.UUID, reply: ProviderReply, settings: Settings) -> None:
     now = datetime.now(timezone.utc)
     bump = settings.screening_mode == "broken"
+    lease_owner = settings.worker_id if settings.screening_mode == "fixed" else None
     async with session_factory() as session:
         await finish_attempt(session, attempt_id, _RESULTS.get(reply.kind, "http_500"), reply.kind)
         if reply.kind == "timeout" and timeout_publishes(settings.screening_mode):
@@ -104,7 +134,14 @@ async def _save_reply(session_factory, snapshot: dict, attempt_id: uuid.UUID, re
                 reasons=[],
                 updated_at=now,
             )
-            await save_job_state(session, snapshot["job_id"], state="succeeded", updated_at=now, bump_attempts=bump)
+            job_rows = await save_job_state(
+                session,
+                snapshot["job_id"],
+                state="succeeded",
+                updated_at=now,
+                bump_attempts=bump,
+                lease_owner=lease_owner,
+            )
         elif reply.kind == "scored" and reply.body is not None:
             decision = decide(reply.body["frames"], snapshot["verified"])
             await insert_decision(
@@ -125,18 +162,26 @@ async def _save_reply(session_factory, snapshot: dict, attempt_id: uuid.UUID, re
                 reasons=decision.reasons,
                 updated_at=now,
             )
-            await save_job_state(session, snapshot["job_id"], state="succeeded", updated_at=now, bump_attempts=bump)
+            job_rows = await save_job_state(
+                session,
+                snapshot["job_id"],
+                state="succeeded",
+                updated_at=now,
+                bump_attempts=bump,
+                lease_owner=lease_owner,
+            )
         elif reply.kind == "accepted":
-            await save_job_state(
+            job_rows = await save_job_state(
                 session,
                 snapshot["job_id"],
                 state="awaiting_callback",
                 updated_at=now,
                 available_at=now + timedelta(seconds=settings.callback_deadline_seconds),
                 bump_attempts=bump,
+                lease_owner=lease_owner,
             )
         else:
-            await save_job_state(
+            job_rows = await save_job_state(
                 session,
                 snapshot["job_id"],
                 state="retry_wait",
@@ -144,5 +189,9 @@ async def _save_reply(session_factory, snapshot: dict, attempt_id: uuid.UUID, re
                 available_at=now + timedelta(seconds=1),
                 needs_enqueue=False,
                 bump_attempts=bump,
+                lease_owner=lease_owner,
             )
+        if lease_owner is not None and job_rows == 0:
+            await session.rollback()
+            return
         await session.commit()

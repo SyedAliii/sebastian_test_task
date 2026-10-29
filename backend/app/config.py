@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     provider_base_url: str = "http://127.0.0.1:8001"
     provider_hmac_secret: str = "test-secret"
     provider_http_timeout_seconds: float = 10
-    screening_mode: Literal["broken", "fixed"] = "broken"
+    screening_mode: Literal["broken", "fixed"] = "fixed"
     lease_seconds: float = 30
     callback_deadline_seconds: float = 30
     worker_id: str = ""

@@ -54,7 +54,7 @@ async def test_generation_is_stored(client, db_session) -> None:
         json={
             "type": "image",
             "source": "generation",
-            "prompt": "a 16-year-old",
+            "prompt": "two adults on a beach at sunset",
             "frames": [{"explicit": 0.1}],
         },
         headers=HEADERS_V,
@@ -62,7 +62,7 @@ async def test_generation_is_stored(client, db_session) -> None:
     assert response.status_code == 202
     async with db_session() as session:
         prompt = await session.scalar(select(Media.prompt).where(Media.id == response.json()["id"]))
-    assert prompt == "a 16-year-old"
+    assert prompt == "two adults on a beach at sunset"
 
 
 async def test_image_with_two_frames_is_422(client, db_session) -> None:

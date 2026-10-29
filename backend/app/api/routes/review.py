@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.deps import get_caller, get_review_service
 from app.db.models import User
-from app.services.review_service import ReviewService
+from app.services.review_service import ReviewService, ReviewUnavailable
 
 router = APIRouter()
 
@@ -18,7 +18,10 @@ async def review_list(
     service: ReviewService = Depends(get_review_service),
 ) -> list:
     _require_admin(caller)
-    return await service.list_held(caller.workspace_id)
+    try:
+        return await service.list_held(caller.workspace_id)
+    except ReviewUnavailable:
+        raise HTTPException(status_code=503, detail="review queue unavailable") from None
 
 
 @router.post("/review/{media_id}/approve")

@@ -42,8 +42,9 @@ async def get_caller(
 def get_media_service(
     session: AsyncSession = Depends(get_session),
     queues: Queues = Depends(get_queues),
+    settings: Settings = Depends(get_settings),
 ) -> MediaService:
-    return MediaService(session, queues)
+    return MediaService(session, queues, settings)
 
 
 def get_review_service(

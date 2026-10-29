@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Job, Media, Workspace
@@ -66,7 +66,8 @@ async def save_job_state(
     available_at: datetime | None = None,
     needs_enqueue: bool | None = None,
     bump_attempts: bool = False,
-) -> None:
+    lease_owner: str | None = None,
+) -> int:
     values: dict = {"state": state, "updated_at": updated_at}
     if available_at is not None:
         values["available_at"] = available_at
@@ -74,4 +75,44 @@ async def save_job_state(
         values["needs_enqueue"] = needs_enqueue
     if bump_attempts:
         values["attempts_used"] = Job.attempts_used + 1
-    await session.execute(update(Job).where(Job.id == job_id).values(**values))
+    statement = update(Job).where(Job.id == job_id)
+    if lease_owner is not None:
+        statement = statement.where(Job.lease_owner == lease_owner)
+    result = await session.execute(statement.values(**values))
+    return result.rowcount or 0
+
+
+async def claim_job(session: AsyncSession, job_id: uuid.UUID, worker_id: str, lease_seconds: float) -> bool:
+    result = await session.execute(
+        text(
+            """
+            update jobs
+            set state = 'running',
+                lease_owner = :worker,
+                lease_until = now() + make_interval(secs => :lease_seconds),
+                attempts_used = attempts_used + 1,
+                needs_enqueue = false
+            where id = :job_id
+              and (
+                (state in ('queued', 'retry_wait') and available_at <= now())
+                or (state = 'running' and lease_until < now())
+              )
+            returning id
+            """
+        ),
+        {"worker": worker_id, "lease_seconds": lease_seconds, "job_id": job_id},
+    )
+    return result.first() is not None
+
+
+async def refresh_lease(session: AsyncSession, job_id: uuid.UUID, worker_id: str, lease_seconds: float) -> None:
+    await session.execute(
+        text(
+            """
+            update jobs
+            set lease_until = now() + make_interval(secs => :lease_seconds)
+            where id = :job_id and lease_owner = :worker and state = 'running'
+            """
+        ),
+        {"lease_seconds": lease_seconds, "job_id": job_id, "worker": worker_id},
+    )
