@@ -1,0 +1,197 @@
+{
+  "info": {
+    "name": "fake provider",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Control",
+      "item": [
+        {
+          "name": "set ok",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"ok\",\n  \"delay_ms\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "set slow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"slow\",\n  \"delay_ms\": 2000\n}"
+            }
+          }
+        },
+        {
+          "name": "set timeout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"timeout\",\n  \"delay_ms\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "set error 500",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"error\",\n  \"delay_ms\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "set error 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"error\",\n  \"delay_ms\": 0,\n  \"error_kind\": \"http_429\"\n}"
+            }
+          }
+        },
+        {
+          "name": "set malformed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"error\",\n  \"delay_ms\": 0,\n  \"error_kind\": \"malformed\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/_stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Score",
+      "item": [
+        {
+          "name": "one frame",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/score",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media_id\": \"{{media_id}}\",\n  \"frames\": [\n    {\n      \"explicit\": 0.02\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "nine frames",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/score",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media_id\": \"demo-nine\",\n  \"frames\": [\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.01\n    },\n    {\n      \"explicit\": 0.95\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "thirty one frames",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/score",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media_id\": \"{{long_media_id}}\",\n  \"frames\": [\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    },\n    {\n      \"explicit\": 0.1\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
