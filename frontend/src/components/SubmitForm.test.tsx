@@ -104,3 +104,29 @@ test("test_still_pending_after_twenty_tries", async () => {
   expect(getMedia).toHaveBeenCalledTimes(20)
   vi.useRealTimers()
 })
+
+test("test_settled_status_notifies_once", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] })
+  const postMedia = vi.fn<SubmitClient["postMedia"]>(async () => ({
+    ok: true,
+    status: 202,
+    data: { id: "abc", status: "pending" },
+  }))
+  const getMedia = vi
+    .fn<SubmitClient["getMedia"]>()
+    .mockResolvedValueOnce({ ok: true, status: 200, data: { id: "abc", status: "pending", reasons: [] } })
+    .mockResolvedValueOnce({ ok: true, status: 200, data: { id: "abc", status: "held", reasons: ["self_harm"] } })
+  const onSettled = vi.fn()
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  render(<SubmitForm client={{ postMedia, getMedia }} caller={caller} onSettled={onSettled} />)
+  await user.click(screen.getByRole("button", { name: "Submit" }))
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000)
+  })
+  expect(screen.getByText(/held/)).toBeInTheDocument()
+  expect(onSettled).toHaveBeenCalledTimes(1)
+  vi.useRealTimers()
+})

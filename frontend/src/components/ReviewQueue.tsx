@@ -15,9 +15,10 @@ export type ReviewClient = {
 type ReviewQueueProps = {
   client: ReviewClient
   caller: Caller
+  refreshKey?: number
 }
 
-export function ReviewQueue({ client, caller }: ReviewQueueProps) {
+export function ReviewQueue({ client, caller, refreshKey = 0 }: ReviewQueueProps) {
   const [input, setInput] = useState<ReviewInput>({ kind: "loading" })
   const [actionFailures, setActionFailures] = useState<Record<string, number>>({})
   const [showBroken] = useState(() => new URLSearchParams(window.location.search).get("reviewBug") === "1")
@@ -47,7 +48,7 @@ export function ReviewQueue({ client, caller }: ReviewQueueProps) {
       return
     }
     loadReview()
-  }, [caller, client])
+  }, [caller, client, refreshKey])
 
   async function onAction(id: string, action: "approve" | "reject") {
     const result = action === "approve" ? await client.approve(caller, id) : await client.reject(caller, id)

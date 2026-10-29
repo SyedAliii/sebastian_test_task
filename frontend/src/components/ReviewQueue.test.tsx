@@ -95,3 +95,16 @@ test("test_failed_request_shows_failure_not_empty", async () => {
   expect(screen.queryByText("Nothing to review")).not.toBeInTheDocument()
   expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument()
 })
+
+test("test_refresh_key_loads_again", async () => {
+  const getReview = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: true as const, status: 200, data: [] as Media[] })
+    .mockResolvedValueOnce({ ok: true as const, status: 200, data: [held("held-new")] })
+  const api = client({ getReview })
+  const { rerender } = render(<ReviewQueue client={api} caller={admin} refreshKey={0} />)
+  await waitFor(() => expect(getReview).toHaveBeenCalledTimes(1))
+  rerender(<ReviewQueue client={api} caller={admin} refreshKey={1} />)
+  expect(await screen.findByText("held-new")).toBeInTheDocument()
+  expect(getReview).toHaveBeenCalledTimes(2)
+})

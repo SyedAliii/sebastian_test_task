@@ -14,6 +14,7 @@ export type SubmitClient = {
 type SubmitFormProps = {
   client: SubmitClient
   caller: Caller
+  onSettled?: () => void
 }
 
 type View =
@@ -47,7 +48,7 @@ function readFrames(text: string): Record<string, unknown> | null {
   }
 }
 
-export function SubmitForm({ client, caller }: SubmitFormProps) {
+export function SubmitForm({ client, caller, onSettled }: SubmitFormProps) {
   const [how, setHow] = useState<How>("upload")
   const [prompt, setPrompt] = useState("two adults on a beach at sunset")
   const [frames, setFrames] = useState(SAFE_IMAGE)
@@ -111,6 +112,7 @@ export function SubmitForm({ client, caller }: SubmitFormProps) {
           timer.current = null
           busy.current = false
           setView({ kind: "status", id, status: media.data.status, reasons: media.data.reasons })
+          onSettled?.()
           return
         }
         if (attempt >= 20) {
