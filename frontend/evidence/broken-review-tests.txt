@@ -1,0 +1,25 @@
+
+> test
+> vitest run
+
+
+ RUN  v5.0.5 D:/MyWorkspace/MainProjects/Other/sebastian_test_task/frontend
+
+ ? src/domain/reviewStates.test.ts (6 tests | 3 failed) 13ms
+   ? test_error_is_not_empty 7ms
+   ? test_network_error_is_not_empty 2ms
+   ? test_forbidden_is_not_empty 1ms
+stdout | src/components/ReviewQueue.test.tsx > test_failed_request_shows_failure_not_empty
+step=review state=loading
+
+stdout | src/components/ReviewQueue.test.tsx > test_failed_request_shows_failure_not_empty
+step=review state=empty
+
+ ? src/components/ReviewQueue.test.tsx (5 tests | 1 failed) 212ms
+   ? test_failed_request_shows_failure_not_empty 11ms
+
+ Test Files  2 failed | 5 passed (7)
+      Tests  4 failed | 22 passed (26)
+   Start at  01:20:33
+   Duration  3.65s (environment 71%, setup 12%, tests 12%, import 2%, transform 2%)
+
