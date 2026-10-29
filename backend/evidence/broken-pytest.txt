@@ -1,0 +1,39 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.2.0, pluggy-1.7.0
+rootdir: D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend
+configfile: pytest.ini
+plugins: anyio-4.15.1, asyncio-1.4.1, respx-0.23.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 10 items
+
+tests\test_incident.py FFFFF.....                                        [100%]
+
+================================== FAILURES ===================================
+E   AssertionError: assert 'published' in {'held', 'pending'}
+D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend\tests\test_incident.py:64: AssertionError: assert 'published' in {'held', 'pending'}
+E   AssertionError: assert 'published' == 'blocked'
+      
+      - blocked
+      + published
+D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend\tests\test_incident.py:82: AssertionError: assert 'published' == 'blocked'
+E   assert 202 == 422
+     +  where 202 = <Response [202 Accepted]>.status_code
+D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend\tests\test_incident.py:98: assert 202 == 422
+E   assert 2 == 1
+D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend\tests\test_incident.py:171: assert 2 == 1
+E   assert 200 == 503
+     +  where 200 = <Response [200 OK]>.status_code
+D:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend\tests\test_incident.py:180: assert 200 == 503
+=================================== PASSES ====================================
+=========================== short test summary info ===========================
+PASSED tests/test_incident.py::test_review_empty_is_200
+PASSED tests/test_incident.py::test_cross_workspace_media_is_404
+PASSED tests/test_incident.py::test_unsigned_callback_is_401
+PASSED tests/test_incident.py::test_member_approve_is_403
+PASSED tests/test_incident.py::test_gray_score_is_held
+FAILED tests/test_incident.py::test_timeout_does_not_publish - AssertionError...
+FAILED tests/test_incident.py::test_frame_nine_blocks_unverified - AssertionE...
+FAILED tests/test_incident.py::test_sixteen_year_old_is_refused - assert 202 ...
+FAILED tests/test_incident.py::test_second_worker_does_not_call_again - asser...
+FAILED tests/test_incident.py::test_review_error_is_not_an_empty_list - asser...
+========================= 5 failed, 5 passed in 2.33s =========================

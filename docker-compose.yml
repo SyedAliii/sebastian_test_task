@@ -1,0 +1,85 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+asyncpg://moderation:moderation@postgres:5432/moderation
+  ALEMBIC_DATABASE_URL: postgresql+psycopg://moderation:moderation@postgres:5432/moderation
+  REDIS_URL: redis://redis:6379/0
+  PROVIDER_BASE_URL: http://provider:8001
+  PROVIDER_HMAC_SECRET: test-secret
+  SCREENING_MODE: ${SCREENING_MODE:-fixed}
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: moderation
+      POSTGRES_PASSWORD: moderation
+      POSTGRES_DB: moderation
+    ports:
+      - "5432:5432"
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/docker/init-test-db.sql:/docker-entrypoint-initdb.d/01-test-db.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "moderation"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  provider:
+    build: ./provider_service
+    ports:
+      - "8001:8001"
+    environment:
+      CALLBACK_BASE_URL: http://api:8000
+      CALLBACK_PATH: /provider/callback
+      PROVIDER_HMAC_SECRET: test-secret
+
+  api:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    environment:
+      <<: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      retries: 20
+
+  worker:
+    build: ./backend
+    command: python -m app.worker_main
+    environment:
+      <<: *backend-env
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      replicas: 2
+
+  scheduler:
+    build: ./backend
+    command: python -m app.scheduler_main
+    environment:
+      <<: *backend-env
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
