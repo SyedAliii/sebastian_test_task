@@ -73,6 +73,19 @@ test("test_stale_reply_is_ignored", async () => {
   expect(screen.getByText("Nothing to review")).toBeInTheDocument()
 })
 
+test("test_try_again_loads_once_more", async () => {
+  const getReview = vi
+    .fn()
+    .mockResolvedValueOnce({ ok: false as const, status: 503, message: "response status 503" })
+    .mockResolvedValueOnce({ ok: true as const, status: 200, data: [] as Media[] })
+  const user = userEvent.setup()
+  render(<ReviewQueue client={client({ getReview })} caller={admin} />)
+  expect(await screen.findByText("Review queue failed")).toBeInTheDocument()
+  await user.click(screen.getByRole("button", { name: "Try again" }))
+  expect(await screen.findByText("Nothing to review")).toBeInTheDocument()
+  expect(getReview).toHaveBeenCalledTimes(2)
+})
+
 test("test_failed_request_shows_failure_not_empty", async () => {
   const getReview = vi.fn(async () => ({ ok: false as const, status: 503, message: "response status 503" }))
   render(<ReviewQueue client={client({ getReview })} caller={admin} />)

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import type { ApiResult, Caller, Media } from "../api/types"
 import { isAdmin } from "../domain/caller"
-import { reviewView, type ReviewInput } from "../domain/reviewView"
+import { reviewView, reviewViewBroken, type ReviewInput } from "../domain/reviewView"
 import { logStep } from "../lib/log"
 
 type ReviewAction = { id: string; status: string }
@@ -20,14 +20,13 @@ type ReviewQueueProps = {
 export function ReviewQueue({ client, caller }: ReviewQueueProps) {
   const [input, setInput] = useState<ReviewInput>({ kind: "loading" })
   const [actionFailures, setActionFailures] = useState<Record<string, number>>({})
+  const [showBroken] = useState(() => new URLSearchParams(window.location.search).get("reviewBug") === "1")
+  const toView = showBroken ? reviewViewBroken : reviewView
   const request = useRef(0)
 
-  useEffect(() => {
+  function loadReview() {
     const mine = request.current + 1
     request.current = mine
-    if (!isAdmin(caller.userId)) {
-      return
-    }
     setInput({ kind: "loading" })
     logStep("review", { state: "loading" })
     void client.getReview(caller).then((result) => {
@@ -38,8 +37,16 @@ export function ReviewQueue({ client, caller }: ReviewQueueProps) {
         ? { kind: "ready", items: result.data }
         : { kind: "error", status: result.status }
       setInput(next)
-      logStep("review", { state: reviewView(next).kind })
+      logStep("review", { state: toView(next).kind })
     })
+  }
+
+  useEffect(() => {
+    if (!isAdmin(caller.userId)) {
+      request.current += 1
+      return
+    }
+    loadReview()
   }, [caller, client])
 
   async function onAction(id: string, action: "approve" | "reject") {
@@ -58,7 +65,7 @@ export function ReviewQueue({ client, caller }: ReviewQueueProps) {
       ? { kind: "ready", items: again.data }
       : { kind: "error", status: again.status }
     setInput(next)
-    logStep("review", { state: reviewView(next).kind })
+    logStep("review", { state: toView(next).kind })
     setActionFailures((current) => {
       const rest = { ...current }
       delete rest[id]
@@ -75,11 +82,21 @@ export function ReviewQueue({ client, caller }: ReviewQueueProps) {
     )
   }
 
-  const view = reviewView(input)
+  const view = toView(input)
   return (
     <section>
       <h2>Review</h2>
-      {view.kind === "loading" || view.kind === "empty" ? <p>{view.text}</p> : null}
+      {view.kind === "loading" ? <p>{view.text}</p> : null}
+      {view.kind === "failed" ? (
+        <>
+          <p>{view.text}</p>
+          <p>{view.status}</p>
+          <button type="button" onClick={() => loadReview()}>
+            Try again
+          </button>
+        </>
+      ) : null}
+      {view.kind === "empty" ? <p>{view.text}</p> : null}
       {view.kind === "list" ? (
         <ul>
           {view.items.map((item) => (

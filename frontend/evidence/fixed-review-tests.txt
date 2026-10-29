@@ -1,0 +1,13 @@
+
+> test
+> vitest run
+
+
+ RUN  v5.0.5 D:/MyWorkspace/MainProjects/Other/sebastian_test_task/frontend
+
+
+ Test Files  7 passed (7)
+      Tests  27 passed (27)
+   Start at  01:22:18
+   Duration  3.66s (environment 71%, setup 12%, tests 12%, import 2%, transform 2%)
+

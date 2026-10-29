@@ -15,6 +15,19 @@ export function reviewView(input: ReviewInput): ReviewView {
   if (input.kind === "loading") {
     return { kind: "loading", text: "Loading review queue" }
   }
+  if (input.kind === "error") {
+    return { kind: "failed", text: "Review queue failed", status: input.status }
+  }
+  if (input.items.length === 0) {
+    return { kind: "empty", text: "Nothing to review" }
+  }
+  return { kind: "list", items: input.items }
+}
+
+export function reviewViewBroken(input: ReviewInput): ReviewView {
+  if (input.kind === "loading") {
+    return { kind: "loading", text: "Loading review queue" }
+  }
   // Incident bug: a failed review request looks empty.
   if (input.kind === "error") {
     return { kind: "empty", text: "Nothing to review" }
