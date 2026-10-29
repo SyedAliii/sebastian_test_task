@@ -1,0 +1,7 @@
+image=447488ff-2503-4b91-8ec4-1d7566a59f01 status=published seconds=33.1 videos_pending=141
+image=dbf3f3f5-75b8-4f89-826b-d7adb492a7d9 status=published seconds=31.0 videos_pending=141
+image=241599a3-6862-43dc-a775-dfe90ccb6722 status=published seconds=29.0 videos_pending=141
+image=c0e0ddd6-2385-4e94-add4-31faf7ade587 status=published seconds=26.9 videos_pending=141
+image=783560e2-13ac-4274-8bf3-d8b6d474e165 status=published seconds=24.9 videos_pending=141
+{"published_unchecked": 66, "provider_calls_per_upload": 0.33170731707317075, "oldest_waiting_seconds": 23.628646}
+{"published_unchecked": 68, "provider_calls_per_upload": 1.0048780487804878, "oldest_waiting_seconds": 0}

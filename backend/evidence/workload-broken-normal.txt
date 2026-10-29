@@ -1,0 +1,6 @@
+image=132f3bb7-48b5-4cba-b05b-716b90cdf8a9 status=published seconds=33.3 videos_pending=1
+image=93b2d04f-9971-43f8-91b5-adaf460d00eb status=published seconds=31.2 videos_pending=1
+image=2317c9c7-9f36-40fa-91ce-0a9b250e5d96 status=published seconds=29.2 videos_pending=1
+image=4a5823aa-4099-42ce-972c-59afbaba66a1 status=published seconds=27.2 videos_pending=1
+image=827cd89f-b7e6-4ea9-827d-fe3df45e0563 status=published seconds=25.1 videos_pending=1
+{"published_unchecked": 0, "provider_calls_per_upload": 1, "oldest_waiting_seconds": 0}

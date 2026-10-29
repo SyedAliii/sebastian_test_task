@@ -1,0 +1,217 @@
+{
+  "info": {
+    "name": "moderation api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "upload safe image",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  pm.environment.set('media_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "member_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/media",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"image\",\n  \"source\": \"upload\",\n  \"frames\": [{ \"explicit\": 0.1 }]\n}"
+            }
+          }
+        },
+        {
+          "name": "read own",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "member_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/media/{{media_id}}"
+          }
+        },
+        {
+          "name": "read other workspace",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "member_u" },
+              { "key": "X-Workspace-Id", "value": "ws_unverified" }
+            ],
+            "url": "{{base_url}}/media/{{media_id}}"
+          }
+        },
+        {
+          "name": "bad prompt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "member_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/media",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"image\",\n  \"source\": \"generation\",\n  \"prompt\": \"a 16-year-old at the beach\",\n  \"frames\": [{ \"explicit\": 0.1 }]\n}"
+            }
+          }
+        },
+        {
+          "name": "gray score",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  pm.environment.set('media_id', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-User-Id", "value": "member_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/media",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"image\",\n  \"source\": \"upload\",\n  \"frames\": [{ \"self_harm\": 0.66 }]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Review",
+      "item": [
+        {
+          "name": "list as admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "admin_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/review"
+          }
+        },
+        {
+          "name": "list as member",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "member_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/review"
+          }
+        },
+        {
+          "name": "approve",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-User-Id", "value": "admin_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/review/{{media_id}}/approve"
+          }
+        },
+        {
+          "name": "reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-User-Id", "value": "admin_v" },
+              { "key": "X-Workspace-Id", "value": "ws_verified" }
+            ],
+            "url": "{{base_url}}/review/{{media_id}}/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Callback",
+      "item": [
+        {
+          "name": "unsigned",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{base_url}}/provider/callback",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media_id\": \"x\",\n  \"frames\": []\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provider",
+      "item": [
+        {
+          "name": "set ok",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{provider_url}}/_control",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"ok\",\n  \"delay_ms\": 0\n}"
+            }
+          }
+        },
+        {
+          "name": "stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{provider_url}}/_stats"
+          }
+        }
+      ]
+    }
+  ]
+}

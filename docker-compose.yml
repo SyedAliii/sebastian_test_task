@@ -4,6 +4,7 @@ x-backend-env: &backend-env
   REDIS_URL: redis://redis:6379/0
   PROVIDER_BASE_URL: http://provider:8001
   PROVIDER_HMAC_SECRET: test-secret
+  PROVIDER_HTTP_TIMEOUT_SECONDS: ${PROVIDER_HTTP_TIMEOUT_SECONDS:-10}
   SCREENING_MODE: ${SCREENING_MODE:-fixed}
 
 services:

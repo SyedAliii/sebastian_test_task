@@ -11,7 +11,7 @@ from app.db.models import Job, Media, Workspace
 from app.domain.decide import decide
 from app.domain.labels import LABELS
 from app.repo.decision_repo import insert_decision, provider_decision_exists
-from app.repo.job_repo import save_job_state
+from app.repo.job_repo import release_parked_jobs, save_job_state
 from app.repo.media_repo import apply_media_status
 
 
@@ -76,7 +76,8 @@ class CallbackService:
             updated_at=now,
         )
         if row.job_id is not None:
-            await save_job_state(self._session, row.job_id, state="succeeded", updated_at=now)
+            await save_job_state(self._session, row.job_id, state="succeeded", updated_at=now, clear_lease=True)
+        await release_parked_jobs(self._session)
         await self._session.commit()
         logger.webhook_in("provider", source="provider")
         return CallbackResult(200, {"status": "ok"})
