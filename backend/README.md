@@ -64,24 +64,12 @@ In Redis Insight, database `local`, the lists `queue:ws_verified` and `queue:ws_
 
 Before-and-after numbers, from the repo root in one PowerShell window:
 
+The burst upload only creates the rows. Set the provider to `timeout` or `ok` yourself, then look at the database. The steps are in `ai_playground\what-to-show.md`, point 5.
+
 ```powershell
-cd d:\MyWorkspace\MainProjects\Other\sebastian_test_task
-$env:SCREENING_MODE = "broken"
-$env:PROVIDER_HTTP_TIMEOUT_SECONDS = "1"
-docker compose up -d --force-recreate api worker scheduler
-cd backend
+cd d:\MyWorkspace\MainProjects\Other\sebastian_test_task\backend
 .\.venv\Scripts\Activate.ps1
-python -m app.scripts.workload --videos 200 --outage | Out-File -Encoding ascii evidence\workload-broken-outage.txt
-python -m app.scripts.workload --videos 200 | Out-File -Encoding ascii evidence\workload-broken-normal.txt
-cd ..
-$env:SCREENING_MODE = "fixed"
-docker compose up -d --force-recreate api worker scheduler
-cd backend
-python -m app.scripts.workload --videos 200 --outage | Out-File -Encoding ascii evidence\workload-fixed-outage.txt
-python -m app.scripts.workload --videos 200 | Out-File -Encoding ascii evidence\workload-fixed-normal.txt
-cd ..
-$env:PROVIDER_HTTP_TIMEOUT_SECONDS = "10"
-docker compose up -d --force-recreate api worker scheduler
+python -m app.scripts.upload_burst --videos 200 --images 5
 ```
 
 A broken outage can show `published_unchecked` above 0. A fixed outage keeps that number at 0. During the outage the images are `held`. After the provider recovers they are `published` without an admin. In a broken normal run, some unverified videos are `published` because the last frame was never sent. In a fixed normal run, every one of those videos is `blocked`. With no outage, provider calls per upload stay close to 1. The images leave `pending` while many videos are still waiting.
